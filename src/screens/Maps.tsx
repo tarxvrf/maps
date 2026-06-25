@@ -33,15 +33,15 @@ import { makePlaceFromCurrentLocation } from '../utils/makeplacecurrent';
 import { formatDistance } from '../utils/convertdistance';
 import { formatCurrency } from '../utils/convertcurrency';
 import { html } from '../html/maphtml';
-
-
-
+import { requestPermission } from '../services/requestpermission';
+import Orderbutton from '../components/Orderbutton';
+import Catatantextpaket from '../components/Catatantextpaket';
 
 export default function Maps() {
   const webviewRef = useRef<any>(null);
   const watchIdRef = useRef<number | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-const MapWebView = WebView as any;
+  const MapWebView = WebView as any;
   const [currentLocation, setCurrentLocation] =
     useState<Coordinate>(DEFAULT_LOCATION);
   const [pickup, setPickup] = useState<Place | null>(null);
@@ -54,32 +54,34 @@ const MapWebView = WebView as any;
   const [isSearching, setIsSearching] = useState(false);
   const [packageNote, setPackageNote] = useState('');
   const [selectedServiceId, setSelectedServiceId] = useState('instant');
-
+ 
+  /// hitung harga dari jarak 
   const selectedService =
     SERVICE_OPTIONS.find(item => item.id === selectedServiceId) ||
-    SERVICE_OPTIONS[0];
-
-  const distance = useMemo(() => {
+    SERVICE_OPTIONS[0]; //pilih serviceoption
+            ///
+  const distance = useMemo(() => {// fungsi untuk mmbuat jarak dari pickup dan tujuan
     if (!pickup || !destination) {
-      return 0;
+      return 0; 
     }
-
-    return getDistance(
+    return getDistance(  
       { latitude: pickup.latitude, longitude: pickup.longitude },
       { latitude: destination.latitude, longitude: destination.longitude },
     );
   }, [destination, pickup]);
-
-  const fare = useMemo(() => {
+        ///
+  const fare = useMemo(() => { //fungsi untuk nentuin harga dari jarak atau tujuan
     if (!distance) {
       return 0;
     }
-
     return Math.ceil(
-      selectedService.baseFare + (distance / 1000) * selectedService.perKm,
+      selectedService.baseFare + (distance / 1000) * selectedService.perKm
     );
   }, [distance, selectedService]);
 
+//end hitung harga dari jarak///
+
+///hitung setimati waktu dari jarak ////
   const estimatedTime = useMemo(() => {
     if (!distance) {
       return selectedService.eta;
@@ -87,6 +89,8 @@ const MapWebView = WebView as any;
 
     return Math.max(selectedService.eta, Math.round(distance / 420) + 8);
   }, [distance, selectedService]);
+///end hitung setimati waktu dari jarak ////
+
 
   const routePayload = useMemo(
     () => ({
@@ -97,17 +101,7 @@ const MapWebView = WebView as any;
     [currentLocation, destination, pickup],
   );
 
-
-
-  const requestPermission = async () => {
-    const permission =
-      Platform.OS === 'ios'
-        ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
-        : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
-    const result = await request(permission);
-
-    return result === RESULTS.GRANTED;
-  };
+ 
 
   const loadHistory = useCallback(async () => {
     const items = await getHistory();
@@ -288,7 +282,7 @@ const MapWebView = WebView as any;
       <MapWebView
         ref={webviewRef}
         originWhitelist={['*']}
-        source={{html}}
+        source={{ html }}
         javaScriptEnabled
         domStorageEnabled
         onLoadEnd={() =>
@@ -419,17 +413,9 @@ const MapWebView = WebView as any;
             })}
           </View>
 
-          <TextInput
-            value={packageNote}
-            onChangeText={setPackageNote}
-            placeholder="Catatan paket, contoh: makanan, dokumen, fragile"
-            placeholderTextColor="#6b7280"
-            style={mapstyles.noteInput}
-          />
+         <Catatantextpaket setPackageNote={setPackageNote} packageNote={packageNote} />
 
-          <Pressable style={mapstyles.orderButton} onPress={createOrder}>
-            <Text style={mapstyles.orderButtonText}>Pesan pengiriman</Text>
-          </Pressable>
+          <Orderbutton createorder={createOrder}/>
 
           {history.length > 0 && (
             <View style={mapstyles.historySection}>

@@ -241,7 +241,8 @@ export const mapstyles = StyleSheet.create({
   },
   historySection: {
     marginTop: 18,
-    paddingBottom: 10,
+    paddingBottom: 30,
+    
   },
   historyTitle: {
     color: '#111827',
