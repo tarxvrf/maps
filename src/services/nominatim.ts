@@ -13,3 +13,4 @@ export const searchPlace = async (keyword: string) => {
 
   return response.json();
 };
+//membuat fitur pencarian dengan database openstreetmap
